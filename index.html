@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GTRX – Sistema de Assinaturas Corporativas</title>
+
+  <!-- Fonte Inter via Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- html2canvas para exportação PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- SheetJS para exportação Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ========================
+       TOASTS / NOTIFICAÇÕES
+  ========================= -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- ========================
+       HEADER
+  ========================= -->
+  <header class="header">
+    <div class="header-inner">
+      <!-- Logo textual representando a GTRX -->
+      <div class="logo">
+        <span class="logo-gtr">GTR</span><span class="logo-x">X</span>
+        <span class="logo-sub">Tecnologia e Engenharia</span>
+      </div>
+      <div class="header-title">
+        <h1>Sistema de Assinaturas Corporativas</h1>
+        <p>Gere sua assinatura de e-mail em segundos</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================
+       NAV / ABAS
+  ========================= -->
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" data-tab="gerar" aria-selected="true">
+      <svg viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm1 11H9V9h2v4zm0-6H9V5h2v2z"/></svg>
+      Gerar Assinatura
+    </button>
+    <button class="tab-btn" role="tab" data-tab="funcionarios" aria-selected="false">
+      <svg viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zm8 0a3 3 0 11-6 0 3 3 0 016 0zM9.293 13H4a1 1 0 00-1 1v1a3 3 0 006 0v-1a1 1 0 00-1-1h-.707zM17 14a1 1 0 00-1-1h-5.293A1 1 0 0010 14v1a3 3 0 006 0v-1z"/></svg>
+      Funcionários Cadastrados
+    </button>
+    <button class="tab-btn" role="tab" data-tab="historico" aria-selected="false">
+      <svg viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"/></svg>
+      Histórico de Envios
+    </button>
+    <button class="tab-btn" role="tab" data-tab="dashboard" aria-selected="false">
+      <svg viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      Dashboard
+    </button>
+  </nav>
+
+  <!-- ========================
+       MAIN CONTENT
+  ========================= -->
+  <main class="main-content">
+
+    <!-- ========== ABA: GERAR ASSINATURA ========== -->
+    <section id="tab-gerar" class="tab-panel active" role="tabpanel">
+      <div class="two-col">
+
+        <!-- FORMULÁRIO -->
+        <div class="card form-card">
+          <h2 class="card-title">Dados do Colaborador</h2>
+
+          <!-- Upload de foto -->
+          <div class="field-group">
+            <label class="field-label">Foto do Funcionário <span class="required">*</span></label>
+            <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Clique ou arraste para enviar foto">
+              <div id="drop-placeholder" class="drop-placeholder">
+                <svg viewBox="0 0 48 48"><path d="M24 8a8 8 0 018 8 10 10 0 010 20H14A10 10 0 1114 16a8 8 0 0110-8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 28v-8m-4 4l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <p>Arraste a foto aqui ou <strong>clique para selecionar</strong></p>
+                <span>PNG, JPG ou WEBP • máx. 5 MB</span>
+              </div>
+              <img id="foto-preview" class="foto-preview hidden" alt="Pré-visualização da foto" />
+              <button id="btn-remover-foto" class="btn-remover-foto hidden" type="button" aria-label="Remover foto">✕</button>
+            </div>
+            <input type="file" id="input-foto" accept="image/*" class="hidden" />
+          </div>
+
+          <!-- Nome -->
+          <div class="field-group">
+            <label class="field-label" for="nome">Nome Completo <span class="required">*</span></label>
+            <input type="text" id="nome" class="field-input" placeholder="Ex: Isabele Chagas" maxlength="80" />
+            <span class="field-error" id="err-nome"></span>
+          </div>
+
+          <!-- Cargo -->
+          <div class="field-group">
+            <label class="field-label" for="cargo">Cargo <span class="required">*</span></label>
+            <select id="cargo" class="field-input">
+              <option value="">Selecione o cargo...</option>
+              <option>Assistente Administrativo</option>
+              <option>Assistente Financeiro</option>
+              <option>Analista Administrativo</option>
+              <option>Analista Financeiro</option>
+              <option>Desenvolvedor</option>
+              <option>Coordenador</option>
+              <option>Supervisor</option>
+              <option>Gerente</option>
+              <option>Diretor</option>
+              <option>Comercial</option>
+              <option>Marketing</option>
+              <option>Recursos Humanos</option>
+              <option>Jurídico</option>
+              <option>Suporte Técnico</option>
+              <option value="Outro">Outro</option>
+            </select>
+            <span class="field-error" id="err-cargo"></span>
+          </div>
+
+          <!-- Cargo customizado -->
+          <div class="field-group hidden" id="grupo-cargo-outro">
+            <label class="field-label" for="cargo-outro">Especifique o Cargo <span class="required">*</span></label>
+            <input type="text" id="cargo-outro" class="field-input" placeholder="Digite o cargo..." maxlength="60" />
+            <span class="field-error" id="err-cargo-outro"></span>
+          </div>
+
+          <!-- Departamento -->
+          <div class="field-group">
+            <label class="field-label" for="departamento">Departamento <span class="required">*</span></label>
+            <select id="departamento" class="field-input">
+              <option value="">Selecione o departamento...</option>
+              <option>Administrativo</option>
+              <option>Financeiro</option>
+              <option>Comercial</option>
+              <option>Marketing</option>
+              <option>Recursos Humanos</option>
+              <option>Tecnologia da Informação</option>
+              <option>Jurídico</option>
+              <option>Operações</option>
+            </select>
+            <span class="field-error" id="err-departamento"></span>
+          </div>
+
+          <!-- Unidade -->
+          <div class="field-group">
+            <label class="field-label" for="unidade">Unidade <span class="required">*</span></label>
+            <select id="unidade" class="field-input">
+              <option value="">Selecione a unidade...</option>
+              <option>Salvador</option>
+              <option>Matriz</option>
+            </select>
+            <span class="field-error" id="err-unidade"></span>
+          </div>
+
+          <!-- Telefone -->
+          <div class="field-group">
+            <label class="field-label" for="telefone">Telefone <span class="required">*</span></label>
+            <input type="tel" id="telefone" class="field-input" placeholder="(00) 00000-0000" maxlength="16" />
+            <span class="field-error" id="err-telefone"></span>
+          </div>
+
+          <!-- E-mail -->
+          <div class="field-group">
+            <label class="field-label" for="email">E-mail Corporativo</label>
+            <input type="email" id="email" class="field-input" placeholder="nome@gtrx.com.br" maxlength="100" />
+            <span class="field-error" id="err-email"></span>
+          </div>
+
+          <!-- Botão principal -->
+          <button id="btn-criar" class="btn btn-primary btn-block">
+            <svg viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"/></svg>
+            CRIAR ASSINATURA
+          </button>
+        </div>
+
+        <!-- PRÉVIA DA ASSINATURA -->
+        <div class="card preview-card">
+          <h2 class="card-title">Pré-visualização</h2>
+          <div id="preview-placeholder" class="preview-empty">
+            <svg viewBox="0 0 64 64"><rect x="4" y="12" width="56" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="28" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 44l12-10 8 6 12-14 16 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            <p>Preencha o formulário e clique em <strong>Criar Assinatura</strong> para visualizar aqui.</p>
+          </div>
+
+          <!-- Assinatura renderizável -->
+          <div id="assinatura-wrapper" class="hidden">
+            <!-- Este bloco é capturado pelo html2canvas -->
+            <div id="assinatura-render" class="assinatura-render">
+              <div class="ass-foto-col">
+                <div class="ass-foto-ring">
+                  <img id="ass-foto" src="" alt="Foto do colaborador" />
+                </div>
+              </div>
+              <div class="ass-divisor"></div>
+              <div class="ass-info-col">
+                <p class="ass-nome" id="ass-nome">—</p>
+                <p class="ass-cargo" id="ass-cargo">—</p>
+                <div class="ass-contatos">
+                  <div class="ass-linha" id="ass-linha-tel">
+                    <span class="ass-icon ass-icon-tel">
+                      <!-- Ícone telefone SVG inline -->
+                      <svg viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
+                    </span>
+                    <span class="ass-tel" id="ass-tel">—</span>
+                  </div>
+                  <div class="ass-linha" id="ass-linha-email">
+                    <span class="ass-icon ass-icon-email">
+                      <svg viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+                    </span>
+                    <span id="ass-email">—</span>
+                  </div>
+                  <div class="ass-linha">
+                    <span class="ass-icon ass-icon-site">
+                      <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16A8 8 0 0010 2zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clip-rule="evenodd"/></svg>
+                    </span>
+                    <span>www.gtrx.com.br</span>
+                  </div>
+                  <div class="ass-linha">
+                    <span class="ass-icon ass-icon-end">
+                      <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                    </span>
+                    <span>Travessa da Ajuda, 1, edif. Martins Catharino, Sala 806, Centro Histórico, Salvador - BA. CEP: 40.026-038.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botões pós-geração -->
+            <div class="btn-group-post">
+              <button id="btn-baixar" class="btn btn-outline">
+                <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                Baixar PNG
+              </button>
+              <button id="btn-copiar" class="btn btn-outline">
+                <svg viewBox="0 0 20 20"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>
+                Copiar Assinatura
+              </button>
+              <button id="btn-editar" class="btn btn-secondary">
+                <svg viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                Editar Dados
+              </button>
+              <button id="btn-nova" class="btn btn-ghost">
+                <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                Nova Assinatura
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ABA: FUNCIONÁRIOS ========== -->
+    <section id="tab-funcionarios" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <div class="table-header-row">
+          <h2 class="card-title">Funcionários Cadastrados</h2>
+          <div class="table-actions">
+            <div class="search-group">
+              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+              <input type="text" id="busca-global" class="field-input search-input" placeholder="Buscar por nome, cargo ou departamento..." />
+            </div>
+            <div class="export-btns">
+              <button id="btn-export-csv" class="btn btn-ghost btn-sm">
+                <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                Exportar CSV
+              </button>
+              <button id="btn-export-xlsx" class="btn btn-ghost btn-sm">
+                <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                Exportar Excel
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros rápidos -->
+        <div class="filter-row">
+          <select id="filtro-cargo" class="field-input field-input-sm">
+            <option value="">Todos os cargos</option>
+          </select>
+          <select id="filtro-depto" class="field-input field-input-sm">
+            <option value="">Todos os departamentos</option>
+          </select>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="tabela-funcionarios">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>Departamento</th>
+                <th>Telefone</th>
+                <th>E-mail</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-funcionarios">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+          <div id="empty-funcionarios" class="empty-state hidden">
+            <svg viewBox="0 0 64 64"><circle cx="32" cy="20" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 54c0-13.255 10.745-24 24-24s24 10.745 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <p>Nenhum funcionário cadastrado ainda.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ABA: HISTÓRICO ========== -->
+    <section id="tab-historico" class="tab-panel" role="tabpanel">
+      <div class="card">
+        <div class="table-header-row">
+          <h2 class="card-title">Histórico de Envios ao RH</h2>
+          <button id="btn-limpar-historico" class="btn btn-ghost btn-sm btn-danger-ghost">Limpar Histórico</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tabela-historico">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Cargo</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-historico">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+          <div id="empty-historico" class="empty-state hidden">
+            <svg viewBox="0 0 64 64"><path d="M8 12h48v40H8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 20h48M20 12v8M44 12v8" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <p>Nenhum envio registrado ainda.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== ABA: DASHBOARD ========== -->
+    <section id="tab-dashboard" class="tab-panel" role="tabpanel">
+      <div class="dashboard-grid">
+        <!-- KPIs -->
+        <div class="card kpi-card">
+          <div class="kpi-icon kpi-blue">
+            <svg viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zm8 0a3 3 0 11-6 0 3 3 0 016 0zM9.293 13H4a1 1 0 00-1 1v1a3 3 0 006 0v-1a1 1 0 00-1-1h-.707zM17 14a1 1 0 00-1-1h-5.293A1 1 0 0010 14v1a3 3 0 006 0v-1z"/></svg>
+          </div>
+          <div>
+            <p class="kpi-label">Total de Funcionários</p>
+            <p class="kpi-value" id="kpi-total">0</p>
+          </div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon kpi-orange">
+            <svg viewBox="0 0 20 20"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+          </div>
+          <div>
+            <p class="kpi-label">E-mails Enviados</p>
+            <p class="kpi-value" id="kpi-enviados">0</p>
+          </div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon kpi-green">
+            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          </div>
+          <div>
+            <p class="kpi-label">Envios com Sucesso</p>
+            <p class="kpi-value" id="kpi-sucesso">0</p>
+          </div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon kpi-red">
+            <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          </div>
+          <div>
+            <p class="kpi-label">Falhas de Envio</p>
+            <p class="kpi-value" id="kpi-falhas">0</p>
+          </div>
+        </div>
+
+        <!-- Gráfico por departamento -->
+        <div class="card dash-chart-card">
+          <h3 class="card-title">Distribuição por Departamento</h3>
+          <div id="chart-depto" class="bar-chart-wrap">
+            <p class="chart-empty">Sem dados para exibir.</p>
+          </div>
+        </div>
+
+        <!-- Gráfico por cargo -->
+        <div class="card dash-chart-card">
+          <h3 class="card-title">Distribuição por Cargo</h3>
+          <div id="chart-cargo" class="bar-chart-wrap">
+            <p class="chart-empty">Sem dados para exibir.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================
+       MODAL DE EDIÇÃO
+  ========================= -->
+  <div id="modal-editar" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Editar Colaborador</h3>
+        <button id="modal-close" class="modal-close" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-id" />
+        <div class="field-group">
+          <label class="field-label">Nome Completo</label>
+          <input type="text" id="edit-nome" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Cargo</label>
+          <input type="text" id="edit-cargo" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Departamento</label>
+          <select id="edit-departamento" class="field-input">
+            <option>Administrativo</option><option>Financeiro</option>
+            <option>Comercial</option><option>Marketing</option>
+            <option>Recursos Humanos</option><option>Tecnologia da Informação</option>
+            <option>Jurídico</option><option>Operações</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Unidade</label>
+          <select id="edit-unidade" class="field-input">
+            <option>Salvador</option><option>Matriz</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Telefone</label>
+          <input type="tel" id="edit-telefone" class="field-input" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">E-mail</label>
+          <input type="email" id="edit-email" class="field-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancelar" class="btn btn-ghost">Cancelar</button>
+        <button id="modal-salvar" class="btn btn-primary">Salvar Alterações</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmação de exclusão -->
+  <div id="modal-excluir" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box modal-box-sm">
+      <div class="modal-header">
+        <h3>Confirmar Exclusão</h3>
+        <button id="excluir-close" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir <strong id="excluir-nome"></strong>? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="excluir-cancelar" class="btn btn-ghost">Cancelar</button>
+        <button id="excluir-confirmar" class="btn btn-danger">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
